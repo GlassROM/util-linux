@@ -227,16 +227,6 @@ static int cpuinfo_parse_line(	struct lscpu_cputype *ct,
 	return 0;
 }
 
-static void print_cputype(struct lscpu_cputype *ct, FILE *f)
-{
-	fprintf(f, "vendor=\"%s\"\n", ct->vendor);
-	fprintf(f, "model=\"%s\"\n", ct->model);
-	fprintf(f, "flags=\"%s\"\n", ct->flags);
-}
-
-
-
-
 int lscpu_read_cpuinfo(struct lscpu_cxt *cxt)
 {
 	struct lscpu_cputype *ct = NULL;
@@ -253,41 +243,32 @@ int lscpu_read_cpuinfo(struct lscpu_cxt *cxt)
 	while (fgets(buf, sizeof(buf), fp) != NULL) {
 		const char *p = skip_space(buf);
 
-		if (*buf && !*p) {
-			if (ct) {
-				ON_DBG(GATHER, print_cputype(ct, stdout));
-				//lscpu_add_cputype(&cxt->cputypes, &cxt->ncputypes, ct);
-			}
+		if (*buf && !*p) {	/* empty line between CPUs in /proc/cpuinfo */
+			if (ct && cpu)
+				lscpu_add_cpu(cxt, cpu, ct);
+
+			lscpu_unref_cpu(cpu);
 			lscpu_unref_cputype(ct);
-/*			lscpu_unref_cpu(cpu);*/
 			ct = NULL, cpu = NULL;
 			continue;
 		}
 		if (!ct)
 			ct = lscpu_new_cputype();
-/*		if (!cpu)
-			cpu = lscpu_new_cpu();*/
+		if (!cpu)
+			cpu = lscpu_new_cpu();
 
 		cpuinfo_parse_line(ct, cpu, p);
-
-		/* TODO: else lscpu_parse_cache(cxt, buf); */
 	}
 
-	/*
-	if (ct)
-		lscpu_add_cputype(&cxt->cputypes, &cxt->ncputypes, ct);
-	if (cpu)
-		lscpu_add_cpu(&cxt->cputs, &cxt->ncpus, cpu);
-	*/
+	if (cpu && ct)
+		lscpu_add_cpu(cxt, cpu, ct);
 
+	lscpu_unref_cpu(cpu);
 	lscpu_unref_cputype(ct);
-	/*lscpu_unref_cpu(cpu);*/
 	fclose(fp);
 
 	return 0;
-	return 0;
 }
-
 
 #ifdef TEST_PROGRAM_CPUTYPE
 /* TODO: move to lscpu.c */
@@ -296,7 +277,7 @@ struct lscpu_cxt *lscpu_new_context(void)
 	return xcalloc(1, sizeof(struct lscpu_cxt));
 }
 
-static void lscpu_free_context(struct lscpu_cxt *cxt)
+void lscpu_free_context(struct lscpu_cxt *cxt)
 {
 	size_t i;
 
@@ -314,6 +295,7 @@ static void lscpu_free_context(struct lscpu_cxt *cxt)
 		lscpu_unref_cputype(cxt->cputypes[i]);
 
 	free(cxt->cputypes);
+	free(cxt->cpus);
 	free(cxt);
 }
 
