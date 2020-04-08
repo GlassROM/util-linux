@@ -260,7 +260,7 @@ static void read_info(struct chmem_desc *desc)
 {
 	char line[128];
 
-	desc->ndirs = scandir(_PATH_SYS_MEMORY, &desc->dirs, filter, versionsort);
+	desc->ndirs = scandir(_PATH_SYS_MEMORY, &desc->dirs, filter, alphasort);
 	if (desc->ndirs <= 0)
 		err(EXIT_FAILURE, _("Failed to read %s"), _PATH_SYS_MEMORY);
 	ul_path_read_buffer(desc->sysmem, line, sizeof(line), "block_size_bytes");

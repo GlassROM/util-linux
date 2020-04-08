@@ -1752,7 +1752,7 @@ static int issuedir_read(struct issue *ie, const char *dirname,
 	if (dd < 0)
 		return 1;
 
-	nfiles = scandirat(dd, ".", &namelist, issuedir_filter, versionsort);
+	nfiles = scandirat(dd, ".", &namelist, issuedir_filter, alphasort);
 	if (nfiles <= 0)
 		goto done;
 

@@ -39,18 +39,4 @@
 #  include <sys/syscall.h>
 # endif
 
-# if !defined(HAVE_UNSHARE) && defined(SYS_unshare)
-static inline int unshare(int flags)
-{
-	return syscall(SYS_unshare, flags);
-}
-# endif
-
-# if !defined(HAVE_SETNS) && defined(SYS_setns)
-static inline int setns(int fd, int nstype)
-{
-	return syscall(SYS_setns, fd, nstype);
-}
-# endif
-
 #endif	/* UTIL_LINUX_NAMESPACE_H */
